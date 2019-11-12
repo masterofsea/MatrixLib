@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Numerics;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace MatrixLib
 {
@@ -90,13 +91,53 @@ namespace MatrixLib
             }            
         }
 
-        public static Matrix Dot(Matrix leftMatrix, Matrix rightMatrix)
+        public static Matrix NaiveDot(Matrix leftMatrix, Matrix rightMatrix)
         {
             if (leftMatrix.Shape[1] != rightMatrix.Shape[0])
-                throw new ArgumentException("Shapes of matrices aren`t aligned");            
+                throw new ArgumentException("Shapes of matrices aren`t aligned");
+            Matrix resultMatrix = new Matrix(leftMatrix.Shape[0], rightMatrix.Shape[1]);
+            
+            for(Int32 i = 0; i < leftMatrix.Shape[0]; ++i)
+            {
+                for (Int32 j = 0; j < rightMatrix.Shape[1]; ++j)
+                {
+                    for(Int32 k = 0; k < rightMatrix.Shape[0]; ++k)
+                    {
+                        resultMatrix[i, j] += leftMatrix[i, k] * rightMatrix[k, j];
+                    }
+                }
+            }
+
+            return resultMatrix;
+
+        }
+
+        public static Matrix NaiveDotWithTransposing(Matrix leftMatrix, Matrix rightMatrix)
+        {
+            if (leftMatrix.Shape[1] != rightMatrix.Shape[0])
+                throw new ArgumentException("Shapes of matrices aren`t aligned");
             Matrix resultMatrix = new Matrix(leftMatrix.Shape[0], rightMatrix.Shape[1]);
             rightMatrix = Matrix.Transpose(rightMatrix);
-            
+
+            for (Int32 i = 0; i < leftMatrix.Shape[0]; ++i)
+            {
+                for (Int32 j = 0; j < rightMatrix.Shape[0]; ++j)
+                {
+                    for (Int32 k = 0; k < rightMatrix.Shape[1]; ++k)
+                    {
+                        resultMatrix[i, j] += leftMatrix[i, k] * rightMatrix[j, k];
+                    }
+                }
+            }
+
+            return resultMatrix;
+        }
+        public static Matrix DotVersion0(Matrix leftMatrix, Matrix rightMatrix)
+        {
+            if (leftMatrix.Shape[1] != rightMatrix.Shape[0])
+                throw new ArgumentException("Shapes of matrices aren`t aligned");
+            Matrix resultMatrix = new Matrix(leftMatrix.Shape[0], rightMatrix.Shape[1]);
+            rightMatrix = Matrix.Transpose(rightMatrix);
 
             for (Int32 row = 0; row < leftMatrix.Shape[0]; ++row)
             {
@@ -105,6 +146,24 @@ namespace MatrixLib
                     resultMatrix[row, col] = Matrix.VecMul(leftMatrix[row], rightMatrix[col]);
                 }
             }
+
+            return resultMatrix;
+        }
+        public static Matrix Dot(Matrix leftMatrix, Matrix rightMatrix)
+        {
+            if (leftMatrix.Shape[1] != rightMatrix.Shape[0])
+                throw new ArgumentException("Shapes of matrices aren`t aligned");            
+            Matrix resultMatrix = new Matrix(leftMatrix.Shape[0], rightMatrix.Shape[1]);
+            rightMatrix = Matrix.Transpose(rightMatrix);
+
+
+            Parallel.For(0, leftMatrix.Shape[0], row =>
+            {
+                for (Int32 col = 0; col < rightMatrix.Shape[0]; ++col)
+                {
+                    resultMatrix[row, col] = Matrix.VecMul(leftMatrix[row], rightMatrix[col]);
+                }
+            });
 
             return resultMatrix;
         }
